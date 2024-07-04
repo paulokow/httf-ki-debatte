@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>KI debatte</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <script type="text/javascript">
+            var generatingResponse = false;
+            function render_response() {
+                if (generatingResponse) {
+                    alert("Dont interrupt the discussion!")
+                    return;
+                }
+                generatingResponse = true;
+                last_p_id = 1
+                var last_response_len = false;
+                $('#content').empty();
+                $('#content').append('<p class="bottext" id="botcontent_' + last_p_id + '"></p>')
+                console.log($('#topic').val())
+                $.ajax('/discuss', {
+                    type: 'post',
+                    dataType: 'json',
+                    data: {
+                        topic: $('#topic').val()
+                    },
+                    xhrFields: {
+                        onprogress: function(e)
+                        {
+                            //console.log(e);
+                            var this_response, response = e.currentTarget.response;
+                            if(last_response_len === false)
+                            {
+                                this_response = response;
+                                last_response_len = response.length;
+                            }
+                            else
+                            {
+                                this_response = response.substring(last_response_len);
+                                last_response_len = response.length;
+                                if (this_response.includes("<h3")) {
+                                    $('#content').append(this_response);
+                                    last_p_id++;
+                                    $('#content').append('<p class="bottext" id="botcontent_' + last_p_id + '"></p>');
+                                }
+                                else {
+                                    $('#botcontent_' + last_p_id).append(this_response);
+                                }
+                            }
+                            //console.log(this_response);
+                        }
+                    }
+                })
+                .done(function(data)
+                {
+                    console.log('Complete response = ' + data);
+                    generatingResponse = false;
+                })
+                .fail(function(data)
+                {
+                    console.log('Error: ', data);
+                    generatingResponse = false;
+                });
+                console.log('Request Sent');
+            }
+        </script>
+    </head>
+    <body>
+        <h1>KI Discussion club</h1>
+        <h2>BOT 1</h2>
+        <ul>
+            <li><b>Model:</b> mistral:7b</li>
+            <li><b>Position:</b> against</li>
+            <li><b>Character:</b> rude and sarcastic</li>
+        </ul>
+        <h2>BOT 2</h2>
+        <ul>
+            <li><b>Model:</b> llama3</li>
+            <li><b>Position:</b> pro</li>
+            <li><b>Character:</b> funny, emphathetic but strong</li>
+        </ul>
+        <input type="text" id="topic" style="width: 300px;" value="Pineapple on pizza is good">
+        <button onclick="render_response();">Let the discussion begin</button>
+        <div id="content"></div>
+    </body>
+</html>
