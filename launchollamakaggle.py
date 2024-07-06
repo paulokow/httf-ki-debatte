@@ -1,6 +1,4 @@
 import ollama
-from kaggle import KaggleApi
-from kaggle.models import KernelPushRequest
 import datetime
 from jinja2 import Environment, FileSystemLoader
 import ngrok
@@ -8,7 +6,6 @@ import json
 from time import sleep
 import os
 from dotenv import load_dotenv
-
 load_dotenv()
 
 def get_running_session_url(wait=False):
@@ -33,6 +30,10 @@ def get_running_session_url(wait=False):
     return None
 
 def launch_remote_ollama(tunnel_run_time_minutes=60):
+    # import kaggle later after env is initiated (otherwise error of not existing config file   )
+    from kaggle import KaggleApi
+    from kaggle.models import KernelPushRequest
+
     url = get_running_session_url()
     if url is not None:
         print(f"Session running: {url}")
