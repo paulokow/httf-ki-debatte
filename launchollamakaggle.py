@@ -5,6 +5,7 @@ import ngrok
 import json
 from time import sleep
 import os
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -39,7 +40,7 @@ def launch_remote_ollama(tunnel_run_time_minutes=60):
         print(f"Session running: {url}")
         return url
     # preprocess kaggle notebook with jinja2
-    env = Environment(loader=FileSystemLoader('notebook_templates'))
+    env = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'notebook_templates')))
     template = env.get_template('ollama-with-ngrok.ipynb')
     start_time = datetime.datetime.utcnow()
     end_time = start_time + datetime.timedelta(minutes=tunnel_run_time_minutes)
