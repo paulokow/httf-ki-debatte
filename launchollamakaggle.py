@@ -51,24 +51,24 @@ def launch_remote_ollama(tunnel_run_time_minutes=60):
     output_from_parsed_template = template.render(tunnel_run_time_minutes=tunnel_run_time_minutes, tunnel_metadata=tunnel_metadata)
     #with open("temp.ipynb", "w") as f:
     #    f.write(output_from_parsed_template)
-#    kaggle_request = KernelPushRequest(
-#        slug='paulokow/ollama-with-ngrok-lite2',
-#        new_title='ollama-with-ngrok-lite2',
-#        text = output_from_parsed_template,
-#        enable_gpu=True,
-#        is_private=True,
-#        dataset_data_sources=[],
-#        kernel_data_sources=[],
-#        language='python',
-#        kernel_type='notebook',
-#        enable_internet=True
-#    )
+    kaggle_request = KernelPushRequest(
+        slug='paulokow/ollama-with-ngrok-lite2',
+        new_title='ollama-with-ngrok-lite2',
+        text = output_from_parsed_template,
+        enable_gpu=True,
+        is_private=True,
+        dataset_data_sources=[],
+        kernel_data_sources=[],
+        language='python',
+        kernel_type='notebook',
+        enable_internet=True
+    )
     
-#    api = KaggleApi()
-#    api.authenticate()
-#    list = api.kernels_list(mine=True)
-#    result = api.kernel_push(kaggle_request)
-#    print(result)
+    api = KaggleApi()
+    api.authenticate()
+    list = api.kernels_list(mine=True)
+    result = api.kernel_push(kaggle_request)
+    print(result)
 
     url = get_running_session_url(True)
     print(f"Session running: {url}")
