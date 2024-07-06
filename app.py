@@ -29,7 +29,10 @@ def discuss():
             finally:
                 generate_lock.release()
     app.logger.info(topic)
-    return app.response_class(stream_with_context(generate()), mimetype='text/html')
+    response = app.response_class(stream_with_context(generate()), mimetype='text/html')
+    # special header for pythonanywhere to stream the response instead of buffering 
+    response.headers['X-Accel-Buffering'] = 'no'
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True)
