@@ -5,6 +5,9 @@ import ngrok
 import json
 from time import sleep
 import os
+from kaggle.api.kaggle_api_extended import KaggleApi
+from kaggle.models import KernelPushRequest
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -35,12 +38,6 @@ def get_running_session_url(wait=False, max_tries=10):
     return None
 
 def launch_remote_ollama(tunnel_run_time_minutes=60):
-    # import kaggle later after env is initiated (otherwise error of not existing config file   )
-    from kaggle.api.kaggle_api_extended import KaggleApi
-    from kaggle.api_client import ApiClient
-    from kaggle.configuration import Configuration
-    from kaggle.models import KernelPushRequest
-
     if os.getenv("KAGGLE_USERNAME") is None or os.getenv("KAGGLE_KEY") is None or os.getenv("NGROK_API_KEY") is None:
         # try local ollama
         tryollama = ollama()
@@ -80,14 +77,7 @@ def launch_remote_ollama(tunnel_run_time_minutes=60):
         enable_internet=True
     )
 
-    #for pythonanywhere https access needs to go over proxy
-    if os.getenv("HTTPS_PROXY") is not None:
-        logger.info(f"Setting up Proxy to access Kaggle API: {os.getenv('HTTPS_PROXY')}")
-        conf = Configuration()
-        conf.proxy = os.getenv("HTTPS_PROXY")
-        api = KaggleApi(ApiClient(conf))
-    else:
-        api = KaggleApi()
+    api = KaggleApi()
 
     api.authenticate()
     result = api.kernel_push(kaggle_request)
