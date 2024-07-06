@@ -1,6 +1,5 @@
 from flask import Flask, request, render_template, stream_with_context
 from discussionclub import yeld_rounds
-from threading import Semaphore
 
 app = Flask(__name__)
 
@@ -8,13 +7,14 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
-generate_lock = Semaphore(1)
+generate_lock = False
 
 @app.route('/discuss', methods=['post'])
 def discuss():
     topic = request.form['topic']
     def generate():
-        if not generate_lock.acquire(False):
+        if generate_lock:
+            generate_lock = True
             yield "Another session running. Try again later\n"
             return
         else:
@@ -27,7 +27,7 @@ def discuss():
                         for x in part.split('\n'):
                             yield x
             finally:
-                generate_lock.release()
+                generate_lock = False
     app.logger.info(topic)
     return app.response_class(stream_with_context(generate()), mimetype='text/html')
 
