@@ -4,11 +4,18 @@ import launchollamakaggle
 # to run ollama on kaggle and expose through ngrok
 # https://www.kaggle.com/code/paulokow/ollama-with-ngrok
 
-
+import logging
+logger = logging.getLogger(__name__)
+logger.setLevel('INFO')
 
 def yeld_rounds(topic, model1="mistral:7b", model2="llama3:instruct", rounds=3):
     yield "<h4>Starting KI server...</h4>"
-    ollama_url = launchollamakaggle.launch_remote_ollama(10)
+    try:
+        ollama_url = launchollamakaggle.launch_remote_ollama(10)
+    except Exception as e:
+        logger.error(f"Exception getting ollama url: {e}")
+        yield f"SYSTEM: Exception {e}</h4>"
+        return
     yield "done\n "
     models = [
         {
@@ -55,6 +62,7 @@ def yeld_rounds(topic, model1="mistral:7b", model2="llama3:instruct", rounds=3):
                 found = True
                 break
         if not found:
+            logger.info(f"Downloading model: {m['name']}")
             yield f'<h4>Downloading model: {m["name"]}</h4>'
             m["client"].pull(m["name"])
             yield "done"
@@ -64,6 +72,7 @@ def yeld_rounds(topic, model1="mistral:7b", model2="llama3:instruct", rounds=3):
         yield f"MODERATOR: Starting discussion on {topic}"
         for runde in range(0, rounds):
             for idx in range(0, 2):
+                logger.info(f"Discussing: round {runde}, actor {idx}")
                 if last_response is not None:
                     models[idx]["prompt"] += [
                         {
@@ -92,8 +101,10 @@ def yeld_rounds(topic, model1="mistral:7b", model2="llama3:instruct", rounds=3):
                     }
                 ]
                 last_response = response
+        logger.info(f"Finished")
         yield f"MODERATOR: discussion finished"
     except Exception as e:
+        logger.error(f"Exception in discussion: {e}")
         yield f"SYSTEM: exception: {e}"
 
 
