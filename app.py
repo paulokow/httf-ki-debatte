@@ -6,8 +6,11 @@ import logging
 
 app = Flask(__name__)
 
-root = logging.getLogger()
-root.addHandler(default_handler)
+for logger in (
+    logging.getLogger('discussionclub'),
+    logging.getLogger('launchollamakaggle'),
+):
+    logger.addHandler(default_handler)
 
 @app.route('/')
 def index():
