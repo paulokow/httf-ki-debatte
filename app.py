@@ -13,6 +13,7 @@ generate_lock = False
 def discuss():
     topic = request.form['topic']
     def generate():
+        global generate_lock
         if generate_lock:
             generate_lock = True
             yield "Another session running. Try again later\n"
