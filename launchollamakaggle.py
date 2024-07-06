@@ -49,8 +49,8 @@ def launch_remote_ollama(tunnel_run_time_minutes=60):
     }).replace("\"", "\\\"")
     #tunnel_metadata = f"ollama_tunnel_{end_time.isoformat()}"
     output_from_parsed_template = template.render(tunnel_run_time_minutes=tunnel_run_time_minutes, tunnel_metadata=tunnel_metadata)
-    with open("temp.ipynb", "w") as f:
-        f.write(output_from_parsed_template)
+    #with open("temp.ipynb", "w") as f:
+    #    f.write(output_from_parsed_template)
     kaggle_request = KernelPushRequest(
         slug='paulokow/ollama-with-ngrok-lite2',
         new_title='ollama-with-ngrok-lite2',
