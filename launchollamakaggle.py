@@ -1,6 +1,6 @@
 import ollama
-#from kaggle import KaggleApi
-#from kaggle.models import KernelPushRequest
+from kaggle import KaggleApi
+from kaggle.models import KernelPushRequest
 import datetime
 from jinja2 import Environment, FileSystemLoader
 import ngrok
