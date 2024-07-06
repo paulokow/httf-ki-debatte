@@ -36,16 +36,15 @@
                             {
                                 this_response = response.substring(last_response_len);
                                 last_response_len = response.length;
-                                if (this_response.includes("<h3")) {
-                                    $('#content').append(this_response);
-                                    last_p_id++;
-                                    $('#content').append('<p class="bottext" id="botcontent_' + last_p_id + '"></p>');
-                                }
-                                else {
-                                    $('#botcontent_' + last_p_id).append(this_response);
-                                }
                             }
-                            //console.log(this_response);
+                            if (this_response.includes("<h")) {
+                                $('#content').append(this_response);
+                                last_p_id++;
+                                $('#content').append('<p class="bottext" id="botcontent_' + last_p_id + '"></p>');
+                            }
+                            else {
+                                $('#botcontent_' + last_p_id).append(this_response);
+                            }
                         }
                     }
                 })
@@ -54,9 +53,10 @@
                     console.log('Complete response = ' + data);
                     generatingResponse = false;
                 })
-                .fail(function(data)
+                .fail(function(e)
                 {
-                    console.log('Error: ', data);
+                    console.log('Error: ', e);
+                    //$('#content').append(e.responseText);
                     generatingResponse = false;
                 });
                 console.log('Request Sent');

@@ -1,4 +1,5 @@
 import ollama
+import launchollamakaggle
 
 # to run ollama on kaggle and expose through ngrok
 # https://www.kaggle.com/code/paulokow/ollama-with-ngrok
@@ -6,6 +7,9 @@ import ollama
 
 
 def yeld_rounds(topic, model1="mistral:7b", model2="llama3:instruct", rounds=3):
+    yield "<h4>Starting KI server...</h4>"
+    ollama_url = launchollamakaggle.launch_remote_ollama(10)
+    yield "done\n "
     models = [
         {
             "name": model1,
@@ -20,7 +24,7 @@ def yeld_rounds(topic, model1="mistral:7b", model2="llama3:instruct", rounds=3):
                 }
             ],
             "stance": "against",
-            "client": ollama.Client("https://bd54-35-247-42-227.ngrok-free.app")
+            "client": ollama.Client(ollama_url)
         },
         {
             "name": model2,
@@ -39,7 +43,7 @@ def yeld_rounds(topic, model1="mistral:7b", model2="llama3:instruct", rounds=3):
                 },
             ],
             "stance": "pro",
-            "client": ollama.Client("https://bd54-35-247-42-227.ngrok-free.app")
+            "client": ollama.Client(ollama_url)
         }
     ]
 
@@ -51,40 +55,46 @@ def yeld_rounds(topic, model1="mistral:7b", model2="llama3:instruct", rounds=3):
                 found = True
                 break
         if not found:
-            yield f'Downloading model: {m["name"]}'
+            yield f'<h4>Downloading model: {m["name"]}</h4>'
             m["client"].pull(m["name"])
+            yield "done"
 
-    last_response = None
-    yield f"Starting discussion on {topic}"
-    for runde in range(0, rounds):
-        for idx in range(0, 2):
-            if last_response is not None:
+    try:
+        last_response = None
+        yield f"MODERATOR: Starting discussion on {topic}"
+        for runde in range(0, rounds):
+            for idx in range(0, 2):
+                if last_response is not None:
+                    models[idx]["prompt"] += [
+                        {
+                            'role': 'user',
+                            'content': last_response
+                        }
+                    ]
+                stream = models[idx]["client"].chat(
+                    model=models[idx]["name"],
+                    messages=models[idx]["prompt"],
+                    stream=True,
+    #                keep_alive=0
+                )
+                response = ''
+                yield f"\n\n*** BOT {idx + 1} {models[idx]['stance']} ({models[idx]['name']}) {runde+1}/{rounds} ***"
+                for chunk in stream:
+                    respchunk = chunk['message']['content']
+                    #print(chunk['message']['content'], end='', flush=True)
+                    response += respchunk
+                    yield respchunk
+
                 models[idx]["prompt"] += [
                     {
-                        'role': 'user',
-                        'content': last_response
+                        'role': 'assistant',
+                        'content': response
                     }
                 ]
-            stream = models[idx]["client"].chat(
-                model=models[idx]["name"],
-                messages=models[idx]["prompt"],
-                stream=True,
-            )
-            response = ''
-            yield f"\n\n*** BOT {idx + 1} {models[idx]['stance']} ({models[idx]['name']}) {runde+1}/{rounds} ***"
-            for chunk in stream:
-                respchunk = chunk['message']['content']
-                #print(chunk['message']['content'], end='', flush=True)
-                response += respchunk
-                yield respchunk
-
-            models[idx]["prompt"] += [
-                {
-                    'role': 'assistant',
-                    'content': response
-                }
-            ]
-            last_response = response
+                last_response = response
+        yield f"MODERATOR: discussion finished"
+    except Exception as e:
+        yield f"SYSTEM: exception: {e}"
 
 
 if __name__ == "__main__":

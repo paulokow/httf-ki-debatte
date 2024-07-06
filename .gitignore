@@ -1,5 +1,8 @@
 /.DS_Store
 /.venv
 /__pycache__
-/kaggle.json
+kaggle.json
 .vercel
+.vscode
+.env
+temp*.*
