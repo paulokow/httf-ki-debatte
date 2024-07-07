@@ -18,6 +18,12 @@ def index():
 
 generate_lock = Semaphore(1)
 
+def get_ip_addr():
+    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
+        return request.environ['REMOTE_ADDR']
+    else:
+        return request.environ['HTTP_X_FORWARDED_FOR'] # if behind a proxy
+
 @app.route('/discuss', methods=['post'])
 def discuss():
     topic = request.form['topic']
@@ -41,7 +47,7 @@ def discuss():
             finally:
                 generate_lock.release()
 
-    app.logger.info(topic)
+    app.logger.info(f"Starting discussion from {get_ip_addr()} on {topic}")
     response = app.response_class(stream_with_context(generate()), mimetype='text/html')
     # special header for pythonanywhere to stream the response instead of buffering 
     response.headers['X-Accel-Buffering'] = 'no'
