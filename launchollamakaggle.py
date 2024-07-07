@@ -5,8 +5,6 @@ import ngrok
 import json
 from time import sleep
 import os
-from kaggle.api.kaggle_api_extended import KaggleApi
-from kaggle.models import KernelPushRequest
 
 
 import logging
@@ -37,35 +35,15 @@ def get_running_session_url(wait=False, max_tries=10):
         sleep(10)
     return None
 
-def launch_remote_ollama(tunnel_run_time_minutes=60):
-    if os.getenv("KAGGLE_USERNAME") is None or os.getenv("KAGGLE_KEY") is None or os.getenv("NGROK_API_KEY") is None:
-        # try local ollama
-        tryollama = ollama()
-        try:
-            tryollama.list()
-        except:
-            raise ConnectionError(f"No local ollama running and Kaggle username or key or ngrok api key not set. Use KAGGLE_USERNAME, KAGGLE_KEY and NGROK_API_KEY environment variables or start ollama locally.")
-
-    url = get_running_session_url()
-    if url is not None:
-        logger.info(f"Session running: {url}")
-        return url
+def start_kaggle_notebook(ngrok_metadata, tunnel_run_time_minutes):
+    from kaggle.api.kaggle_api_extended import KaggleApi
+    from kaggle.models import KernelPushRequest
     # preprocess kaggle notebook with jinja2
     env = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'notebook_templates')))
     template = env.get_template('ollama-with-ngrok.ipynb')
-    start_time = datetime.datetime.utcnow()
-    end_time = start_time + datetime.timedelta(minutes=tunnel_run_time_minutes)
-    tunnel_metadata = json.dumps({
-        "name": "ollama_tunnel",
-        "start": start_time.isoformat(),
-        "end": end_time.isoformat()
-    }).replace("\"", "\\\"")
-    #tunnel_metadata = f"ollama_tunnel_{end_time.isoformat()}"
-    output_from_parsed_template = template.render(tunnel_run_time_minutes=tunnel_run_time_minutes, tunnel_metadata=tunnel_metadata)
-    #with open("temp.ipynb", "w") as f:
-    #    f.write(output_from_parsed_template)
+    output_from_parsed_template = template.render(tunnel_run_time_minutes=tunnel_run_time_minutes, tunnel_metadata=ngrok_metadata)
     kaggle_request = KernelPushRequest(
-        slug='paulokow/ollama-with-ngrok-lite2',
+        slug=f'{os.getenv("KAGGLE_USERNAME")}/ollama-with-ngrok-lite2',
         new_title='ollama-with-ngrok-lite2',
         text = output_from_parsed_template,
         enable_gpu=True,
@@ -82,6 +60,31 @@ def launch_remote_ollama(tunnel_run_time_minutes=60):
     api.authenticate()
     result = api.kernel_push(kaggle_request)
     logger.info(f"Kaggle result: {result}")
+
+
+def launch_remote_ollama(tunnel_run_time_minutes=60):
+    if os.getenv("KAGGLE_USERNAME") is None or os.getenv("KAGGLE_KEY") is None or os.getenv("NGROK_API_KEY") is None:
+        # try local ollama
+        logger.warn(f"Configuration missing. Trying local ollama")
+        try:
+            logger.info(f"Available models: \n{ollama.list()}")
+            return "http://localhost:11434"
+        except:
+            logger.error(f"No local ollama running and Kaggle username or key or ngrok api key not set. Use KAGGLE_USERNAME, KAGGLE_KEY and NGROK_API_KEY environment variables or start ollama locally.")
+            raise ConnectionError(f"No local ollama running and Kaggle username or key or ngrok api key not set. Use KAGGLE_USERNAME, KAGGLE_KEY and NGROK_API_KEY environment variables or start ollama locally.")
+
+    url = get_running_session_url()
+    if url is not None:
+        logger.info(f"Session running: {url}")
+        return url
+    start_time = datetime.datetime.utcnow()
+    end_time = start_time + datetime.timedelta(minutes=tunnel_run_time_minutes)
+    tunnel_metadata = json.dumps({
+        "name": "ollama_tunnel",
+        "start": start_time.isoformat(),
+        "end": end_time.isoformat()
+    }).replace("\"", "\\\"")
+    start_kaggle_notebook(tunnel_metadata, tunnel_run_time_minutes)
 
     url = get_running_session_url(True)
     logger.info(f"Session running: {url}")
