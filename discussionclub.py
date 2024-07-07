@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel('INFO')
 
 def yeld_rounds(topic, model1="mistral:7b", model2="llama3:instruct", rounds=3):
-    yield "<h4>Starting KI server...</h4>"
+    yield "<h4>Starting the AI server on Kaggle (may take like a minute)...</h4>"
     try:
         ollama_url = launchollamakaggle.launch_remote_ollama(10)
     except Exception as e:
@@ -62,8 +62,8 @@ def yeld_rounds(topic, model1="mistral:7b", model2="llama3:instruct", rounds=3):
                 found = True
                 break
         if not found:
-            logger.info(f"Downloading model: {m['name']}")
-            yield f'<h4>Downloading model: {m["name"]}</h4>'
+            logger.info(f"Downloading model: {m['name']}.")
+            yield f'<h4>Downloading model: {m["name"]}. It can also take a minute...</h4>'
             m["client"].pull(m["name"])
             yield "done"
 
